@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#define UNUSED(x) (void)(x)
 #define OUTPUT_BUF_SIZE 1024
 #define BUF_FLUSH -1
 
@@ -111,6 +112,11 @@ void init_params(params_t *params, va_list ap);
 
 /* string_fields.c modoule */
 char *get_precision(char *p, params_t *params, va_list ap);
+int write_number(int is_positive, int ind, char buffer[],
+	int flags, int width, int precision, int size);
+
+long int convert_size_number(long int num, int size);
+
 
 /* _prinf.c module */
 int _printf(const char *format, ...);
