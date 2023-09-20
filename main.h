@@ -1,124 +1,136 @@
-#ifndef _PRINTF_H
-#define _PRINTF_H
+#ifndef MAIN_H
+#define MAIN_H
 
-#include <stdarg.h>
-#include <stdio.h>
+
+#include <stdlib.h>
 #include <unistd.h>
 #include <limits.h>
-#include <stdlib.h>
+#include <stdarg.h>
 
-#define UNUSED(x) (void)(x)
-#define OUTPUT_BUF_SIZE 1024
-#define BUF_FLUSH -1
+/* FLAGS */
+#define PLUS 1
+#define SPACE 2
+#define HASH 4
+#define ZERO 8
+#define MINUS 16
+#define PLUS_FLAG (format_flags & 1)
+#define SPACE_FLAG ((format_flags >> 1) & 1)
+#define HASH_FLAG ((format_flags >> 2) & 1)
+#define ZERO_FLAG ((format_flags >> 3) & 1)
+#define MINUS_FLAG ((format_flags >> 4) & 1)
 
+/* LENGTH */
+#define SHORT 1
+#define LONG 2
 
-#define NULL_STRING "(null)"
-
-#define PARAMS_INIT {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-
-#define CONVERT_LOWERCASE	1
-#define CONVERT_UNSIGNED	2
 
 /**
- * struct parameters - parameters struct
- *
- * @unsign: flag if unsigned value
- *
- * @plus_flag: on if plus_flag specified
- * @space_flag: on if hashtag_flag specified
- * @hashtag_flag: on if _flag specified
- * @zero_flag: on if _flag specified
- * @minus_flag: on if _flag specified
- *
- * @width: field width specified
- * @precision: field precision specified
- *
- * @h_modifier: on if h_modifier is specified
- * @l_modifier: on if l_modifier is specified
- *
+ * struct buf - Struct of buf.
+ * @buffer: A pointer to data in memory.
+ * @start:  A  pointer to the beginning of buffer.
+ * @length: The length of the data stored in buffer.
  */
-typedef struct parameters
+
+typedef struct buf
 {
-	unsigned int unsign			: 1;
+	char *buffer;
+	char *start;
+	unsigned int length;
+} buf_t;
 
-	unsigned int plus_flag		: 1;
-	unsigned int space_flag		: 1;
-	unsigned int hashtag_flag	: 1;
-	unsigned int zero_flag		: 1;
-	unsigned int minus_flag		: 1;
-
-	unsigned int width;
-	unsigned int precision;
-
-	unsigned int h_modifier		: 1;
-	unsigned int l_modifier		: 1;
-} params_t;
 
 /**
- * struct specifier - Struct token
- *
- * @specifier: format token
- * @f: The function associated
+ * struct ca_specifier - Struct of specifier.
+ * @specifier: A  pointer to a specifier.
+ * unsigned int (*f)(va_list, buf_t *, unsigned char, int, int, unsigned char):
+ *       A function pointer with specific parameters and return type.
+ * @f: A pointer to a conversion function corresponding to specifier.
  */
-typedef struct specifier
+
+typedef struct ca_specifier
 {
 	char *specifier;
-	int (*f)(va_list, params_t *);
-} specifier_t;
+	unsigned int (*f)(va_list, buf_t *, unsigned char, int, int, unsigned char);
+} ca_specifier_t;
 
-/* _put.c module */
-int _puts(char *str);
-int _putchar(int c);
+/**
+ * struct flags - Struct of flags.
+ * @flag: A char for flag.
+ * @value: value of flag.
+ */
 
-/* print_functions.c module */
-int print_char(va_list ap, params_t *params);
-int print_int(va_list ap, params_t *params);
-int print_string(va_list ap, params_t *params);
-int print_percent(va_list ap, params_t *params);
-int print_S(va_list ap, params_t *params);
+typedef struct flags
+{
+	unsigned char flag;
+	int value;
+} flags_t;
 
-/* number.c module */
-char *convert(long int num, int base, int flags, params_t *params);
-int print_unsigned(va_list ap, params_t *params);
-int print_address(va_list ap, params_t *params);
-
-/* specifier.c module */
-int (*get_specifier(char *s))(va_list ap, params_t *params);
-int get_print_func(char *s, va_list ap, params_t *params);
-int get_flag(char *s, params_t *params);
-int get_modifier(char *s, params_t *params);
-char *get_width(char *s, params_t *params, va_list ap);
-
-/* convert_number.c module */
-int print_hex(va_list ap, params_t *params);
-int print_HEX(va_list ap, params_t *params);
-int print_binary(va_list ap, params_t *params);
-int print_octal(va_list ap, params_t *params);
-
-/* simple_printers.c module */
-int print_from_to(char *start, char *stop, char *except);
-int print_rev(va_list ap, params_t *params);
-int print_rot13(va_list ap, params_t *params);
-
-/* print_number.c module */
-int _isdigit(int c);
-int _strlen(char *s);
-int print_number(char *str, params_t *params);
-int print_number_right_shift(char *str, params_t *params);
-int print_number_left_shift(char *str, params_t *params);
-
-/* params.c module */
-void init_params(params_t *params, va_list ap);
-
-/* string_fields.c modoule */
-char *get_precision(char *p, params_t *params, va_list ap);
-int write_number(int is_positive, int ind, char buffer[],
-	int flags, int width, int precision, int size);
-
-long int convert_size_number(long int num, int size);
-
-
-/* _prinf.c module */
 int _printf(const char *format, ...);
+void flush(va_list args, buf_t *out);
+int r_printf(const char *format, va_list args, buf_t *out);
+
+/* functions to convert  */
+
+unsigned int Co_Char(va_list arguments, buf_t *buffer,
+		unsigned char format_flags, int width, int precision, unsigned char size);
+unsigned int store_string(va_list args, buf_t *out,
+		unsigned char format_flags, int wid, int prec, unsigned char length);
+unsigned int co_r(va_list args, buf_t *out,
+		unsigned char format_flags, int wid, int prec, unsigned char length);
+unsigned int co_R(va_list args, buf_t *out,
+		unsigned char format_flags, int wid, int prec, unsigned char length);
+unsigned int co_S(va_list args, buf_t *out,
+		unsigned char format_flags, int wid, int prec, unsigned char length);
+unsigned int Co_Percent(va_list arguments, buf_t *buffer,
+		unsigned char format_flags, int width, int precision, unsigned char size);
+unsigned int Co_Pointer(va_list arguments, buf_t *buffer,
+		unsigned char format_flags, int width, int precision, unsigned char size);
+unsigned int Co_LoHex(va_list arguments, buf_t *buffer,
+		unsigned char format_flags, int width, int precision, unsigned char size);
+unsigned int Co_UpHex(va_list arguments, buf_t *buffer,
+		unsigned char format_flags, int width, int precision, unsigned char size);
+unsigned int co_Int(va_list args, buf_t *out,
+		unsigned char format_flags, int wid, int prec, unsigned char length);
+unsigned int co_Binary(va_list params, buf_t *buffer,
+		unsigned char modifiers, int width, int precision, unsigned char size);
+unsigned int co_Octal(va_list params, buf_t *buffer,
+		 unsigned char modifiers, int width, int precision, unsigned char size);
+unsigned int co_Decimal(va_list params, buf_t *buffer,
+		unsigned char modifiers, int width, int precision, unsigned char size);
+
+/* Another Functions */
+
+buf_t *init_buffer(void);
+void free_buffer(buf_t *out);
+unsigned int _memcpy(buf_t *out, const char *src, unsigned int n);
+unsigned int convert_sbase(buf_t *out_buffer, long int number,
+		char *base_string, unsigned char format_flags, int min_width, int precision);
+unsigned int convert_ubase(buf_t *out_buffer, unsigned long int number,
+		char *base_string, unsigned char format_flags, int min_width, int precision);
+
+/* Modifiers */
+
+unsigned int print_width(buf_t *out, unsigned int printed,
+		unsigned char format_flags, int wid);
+unsigned int print_string_width(buf_t *out,
+		unsigned char format_flags, int wid, int prec, int size);
+unsigned int print_neg_width(buf_t *out, unsigned int printed,
+		unsigned char format_flags, int wid);
+
+/* Handlers */
+
+/**
+ * handlers_specifiers - handle.
+ * @ptr_flag: A pointer to a potential string of flags.
+ * @ptr_ft: A pointer to the current index of the format string.
+ * Return: If flag characters are found - a bitwise value of the flags.
+ */
+
+unsigned char get_flag_value(const char *ptr_flag, char *ptr_ft);
+unsigned char get_length_value(const char *ptr_mod, char *ptr_ft);
+int get_width_value(va_list args, const char *ptr_mod, char *ptr_ft);
+int get_precision_value(va_list args, const char *ptr_mod, char *ptr_ft);
+unsigned int(*handle_specifiers(const char *specifier))(va_list, buf_t *,
+		unsigned char, int, int, unsigned char);
 
 #endif
